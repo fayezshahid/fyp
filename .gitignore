@@ -1,0 +1,5 @@
+__pycache__/
+frames_output/
+venv/
+temp_video.mp4
+.evn

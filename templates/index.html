@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <title>CRICCOM - AI</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        #app-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #video-player {
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .commentary-section {
+            width: 80%;
+            max-width: 800px;
+            margin-top: 20px;
+            /* padding: 10px; */
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /* display: flex;
+            flex-direction: column;
+            align-items: flex-start; */
+        }
+
+        .overs{
+            background-color: red;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comm{
+            padding: 10px;
+        }
+
+        .runs{
+            background-color: green;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #upload-btn {
+            margin-top: 20px;
+            cursor: pointer;
+            padding: 10px 20px;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <input type="file" accept="video/*" id="upload-btn" onchange="handleFileUpload()">
+        <video controls id="video-player"></video>
+        <!-- <div class="row commentary-section">
+            <div class="col-1 overs">4.2</div>
+            <div class="col-10 comm">
+                Zampa to Babar, Good length, Leg stump, Babar plays at Fine Leg region. Tried for another one but lost wicket. Now 175 for 3
+            </div>
+            <div class="col-1 runs">Wicket</div>
+        </div> -->
+        <div class="row commentary-section">
+            <div class="col-1 overs"></div>
+            <div class="col-10 comm">
+                
+            </div>
+            <div class="col-1 runs"></div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        function handleFileUpload() {
+            const uploadInput = document.getElementById('upload-btn');
+            const videoPlayer = document.getElementById('video-player');
+            const commentarySection = document.getElementsByClassName('commentary-section');
+
+            const file = uploadInput.files[0];
+            const videoURL = URL.createObjectURL(file);
+
+            // Assume you have a function to get commentary based on the uploaded video
+            // const commentaryData = getCommentaryData(videoURL);
+
+            // Set video source and autoplay
+            videoPlayer.src = videoURL;
+            videoPlayer.autoplay = true;
+
+            // Display commentary in the commentary section
+            triggerProcess(file);
+        }
+
+        function triggerProcess(file) {
+            // Assume this function fetches commentary data from your backend/API
+            // You may need to send the video to your server for processing
+            // and get back the commentary data
+            // Replace this with your actual implementation
+            // return [
+            //     { time: '00:00:05', text: 'Wajdan: Hilata hai?' },
+            //     { time: '00:00:08', text: 'Arhum: What Sir?' },
+            //     { time: '00:00:11', text: 'Bilal: Aray chotey nawab ke sath guftugu krta ha?' },
+            //     { time: '00:00:20', text: 'Arhum: Sir I dont know any nawab' },
+            //     { time: '00:00:22', text: 'Wajdan: Do you mast***bate?!' },
+            //     { time: '00:00:24', text: 'Arhum: NO!' },
+            //     // Add more commentary data...
+            // ];
+            // console.log('triggered')
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            $.ajax({
+                url: 'get_commentary',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    console.log(data.message);
+                    // Additional code to handle the response, e.g., displaying a success message
+                },
+                error: function(error) {
+                    console.error('Error:', error);
+                    // Additional code to handle errors, e.g., displaying an error message
+                }
+            });
+        }
+
+        // let commData = ''
+        let count = 0
+
+        function getCommentaryPartData(){
+            $.get('get_commentary_part', function(data) {
+                // console.log(data);
+                // if(data.refined_commentary){
+                //     curr_comm = data.refined_commentary
+                // }
+                // else{
+                //     curr_comm = data
+                // }
+
+                if(data){
+                    // commData = curr_comm;
+                    if(count == 4 || count == 0){
+                        count = 1
+                        displayCommentary(data, false);
+                    }
+                    else{
+                        count++;
+                        displayCommentary(data, false)
+                    }
+                }
+            });
+        }
+
+        // run every n seconds
+        setInterval(getCommentaryPartData, 4000);
+
+        function displayCommentary(commentaryData, createNewBlock) {
+            const commentarySection = document.getElementsByClassName('commentary-section');
+            console.log(commentaryData)
+            if(commentaryData.refined_commentary){
+                // console.log(commentaryData)
+                var lastCommentarySection = $('.commentary-section:last');
+                lastCommentarySection.find('.comm').append(commentaryData.refined_commentary);
+            }
+            else if(/^\d+\.\d+/.test(commentaryData)){
+                var parts = commentaryData.split('-');
+                var floatNumber = parts[0].trim();
+                var restOfText = parts.slice(1).join('-').trim();
+
+                var lastCommentarySection = $('.commentary-section:last');
+                lastCommentarySection.find('.overs').text(floatNumber);
+                // lastCommentarySection.find('.comm').append(restOfText);
+            }
+            else if ((match = commentaryData.match(/^(.*?)\. Now/))) {
+                var event = match[1].trim();
+                var restOfText = commentaryData.replace(match[1], '').trim().replace(' . ', '');
+                console.log(restOfText)
+                var lastCommentarySection = $('.commentary-section:last');
+                lastCommentarySection.find('.runs').text(event);
+                // lastCommentarySection.find('.comm').append(restOfText);
+            }
+
+            // if (createNewBlock) {
+            //     const commentElement = document.createElement('p');
+            //     commentElement.textContent = commentaryData;
+            //     commentarySection.appendChild(commentElement);
+            // }
+            // else{
+            //     // get last p and append data in it
+            //     const commentElement = commentarySection.lastChild;
+            //     commentElement.textContent += commentaryData;
+            // }
+            
+        }
+    </script>
+</body>
+</html>
